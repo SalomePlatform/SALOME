@@ -40,25 +40,29 @@ Usage: salome [command] [options] [--config=<file,folder,...>]
 
 Commands:
 =========
-    start         Starts a SALOME session (through virtual application)
-    shell         Initializes SALOME environment, and executes scripts passed
-                  as command arguments
-    connect       Connects a Python console to the active SALOME session
-    killall       Kill all SALOME running sessions for current user
-    info          Display some information about SALOME
-    help          Show this message
-    coffee        Yes! SALOME can also make coffee!!
+    start           Starts a SALOME session (through virtual application)
+    context         Initializes SALOME context.
+    shell           Initializes SALOME context, and executes scripts passed
+                    as command arguments
+    connect         Connects a Python console to the active SALOME session
+    kill <port(s)>  Terminate SALOME session running on given ports for current user
+                    Port numbers must be separated by blank characters
+    killall         Kill *all* SALOME running sessions for current user
+    test            Run SALOME tests.
+    info            Display some information about SALOME
+    help            Show this message
+    coffee          Yes! SALOME can also make coffee!!
 
 If no command is given, default to start.
 
 Command options:
 ================
-    Use salome <command> --help to show help on command ; available for start
-    and shell commands.
+    Use salome <command> --help to show help on command ; available for commands:
+    start, shell, test.
 
 --config=<file,folder,...>
 ==========================
-    Initialize SALOME environment from a list of context files and/or a list
+    Initialize SALOME context from a list of context files and/or a list
     of folders containing context files. The list is comma-separated, whithout
     any blank characters.
 '''
@@ -67,18 +71,18 @@ Command options:
 #
 
 """
-The SalomeContext class in an API to configure SALOME environment then
+The SalomeContext class in an API to configure SALOME context then
 start SALOME using a single python command.
 
 """
 class SalomeContext:
   """
-  Initialize environment from a list of configuration files
+  Initialize context from a list of configuration files
   identified by their names.
   These files should be in appropriate (new .cfg) format.
   However you can give old .sh environment files; in this case,
   the SalomeContext class will try to automatically convert them
-  to .cfg format before setting the environment.
+  to .cfg format before setting the context.
   """
   def __init__(self, configFileNames=0):
     #it could be None explicitely (if user use multiples setVariable...for standalone)
@@ -88,18 +92,18 @@ class SalomeContext:
     if len(configFileNames) == 0:
       raise SalomeContextException("No configuration files given")
 
-    reserved=['PATH', 'DYLD_LIBRARY_PATH', 'LD_LIBRARY_PATH', 'PYTHONPATH', 'MANPATH', 'PV_PLUGIN_PATH']
+    reserved=['PATH', 'DYLD_LIBRARY_PATH', 'LD_LIBRARY_PATH', 'PYTHONPATH', 'MANPATH', 'PV_PLUGIN_PATH', 'INCLUDE', 'LIBPATH', 'SALOME_PLUGINS_PATH']
     for filename in configFileNames:
       basename, extension = os.path.splitext(filename)
       if extension == ".cfg":
-        self.__setEnvironmentFromConfigFile(filename, reserved)
+        self.__setContextFromConfigFile(filename, reserved)
       elif extension == ".sh":
         #new convert procedures, temporary could be use not to be automatically deleted
         #temp = tempfile.NamedTemporaryFile(suffix='.cfg', delete=False)
         temp = tempfile.NamedTemporaryFile(suffix='.cfg')
         try:
           convertEnvFileToConfigFile(filename, temp.name, reserved)
-          self.__setEnvironmentFromConfigFile(temp.name, reserved)
+          self.__setContextFromConfigFile(temp.name, reserved)
           temp.close()
         except (ConfigParser.ParsingError, ValueError) as e:
           self.getLogger().error("Invalid token found when parsing file: %s\n"%(filename))
@@ -123,7 +127,7 @@ class SalomeContext:
   def runSalome(self, args):
     import os
     # Run this module as a script, in order to use appropriate Python interpreter
-    # according to current path (initialized from environment files).
+    # according to current path (initialized from context files).
     mpi_module_option = "--with-mpi-module="
     mpi_module = [x for x in args if x.startswith(mpi_module_option)]
     if mpi_module:
@@ -209,13 +213,17 @@ class SalomeContext:
     options = args[1:]
 
     availableCommands = {
-      'start' :   '_runAppli',
-      'shell' :   '_runSession',
+      'start'   : '_runAppli',
+      'context' : '_setContext',
+      'shell'   : '_runSession',
       'connect' : '_runConsole',
-      'killall':  '_killAll',
-      'info':     '_showInfo',
-      'help':     '_usage',
-      'coffee' :  '_makeCoffee'
+      'kill'    : '_kill',
+      'killall' : '_killAll',
+      'test'    : '_runTests',
+      'info'    : '_showInfo',
+      'help'    : '_usage',
+      'coffee'  : '_makeCoffee',
+      'car'     : '_getCar',
       }
 
     if not command in availableCommands.keys():
@@ -268,7 +276,7 @@ class SalomeContext:
       sys.exit(1)
   #
 
-  def __setEnvironmentFromConfigFile(self, filename, reserved=None):
+  def __setContextFromConfigFile(self, filename, reserved=None):
     if reserved is None:
       reserved = []
     try:
@@ -284,7 +292,7 @@ class SalomeContext:
         temp = tempfile.NamedTemporaryFile(suffix='.cfg')
         try:
           convertEnvFileToConfigFile(sh_file, temp.name, reserved)
-          self.__setEnvironmentFromConfigFile(temp.name, reserved)
+          self.__setContextFromConfigFile(temp.name, reserved)
           msg += "OK\n"
           self.getLogger().warning(msg)
           temp.close()
@@ -302,12 +310,15 @@ class SalomeContext:
     for var in unsetVars:
       self.unsetVariable(var)
 
-    # set environment
+    # set context
     for reserved in reservedDict:
       a = filter(None, reservedDict[reserved]) # remove empty elements
       a = [ os.path.realpath(x) for x in a ]
       reformattedVals = os.pathsep.join(a)
-      self.addToVariable(reserved, reformattedVals)
+      if reserved in ["INCLUDE", "LIBPATH"]:
+        self.addToVariable(reserved, reformattedVals, separator=' ')
+      else:
+        self.addToVariable(reserved, reformattedVals)
       pass
 
     for key,val in configVars:
@@ -319,9 +330,7 @@ class SalomeContext:
     sys.path[:0] = pythonpath
   #
 
-  def _runAppli(self, args=None):
-    if args is None:
-      args = []
+  def _runAppli(self, args=[]):
     # Initialize SALOME environment
     sys.argv = ['runSalome'] + args
     import setenv
@@ -331,9 +340,27 @@ class SalomeContext:
     runSalome.runSalome()
   #
 
-  def _runSession(self, args=None):
-    if args is None:
-      args = []
+  def _setContext(self, args=None):
+    salome_context_set = os.getenv("SALOME_CONTEXT_SET")
+    if salome_context_set:
+      print "***"
+      print "*** SALOME context has already been set."
+      print "*** Enter 'exit' (only once!) to leave SALOME context."
+      print "***"
+      return
+
+    os.environ["SALOME_CONTEXT_SET"] = "yes"
+    print "***"
+    print "*** SALOME context is now set."
+    print "*** Enter 'exit' (only once!) to leave SALOME context."
+    print "***"
+
+    cmd = ["/bin/bash"]
+    proc = subprocess.Popen(cmd, shell=False, close_fds=True)
+    return proc.communicate()
+  #
+
+  def _runSession(self, args=[]):
     sys.argv = ['runSession'] + args
     import runSession
     params, args = runSession.configureSession(args, exe="salome shell")
@@ -345,9 +372,7 @@ class SalomeContext:
     return runSession.runSession(params, args)
   #
 
-  def _runConsole(self, args=None):
-    if args is None:
-      args = []
+  def _runConsole(self, args=[]):
     # Initialize SALOME environment
     sys.argv = ['runConsole'] + args
     import setenv
@@ -358,9 +383,24 @@ class SalomeContext:
     return proc.communicate()
   #
 
-  def _killAll(self, args=None):
-    if args is None:
-      args = []
+  def _kill(self, args=[]):
+    ports = args
+    if not ports:
+      print "Port number(s) not provided to command: salome kill <port(s)>"
+      return
+
+    from multiprocessing import Process
+    from killSalomeWithPort import killMyPort
+    import tempfile
+    for port in ports:
+      with tempfile.NamedTemporaryFile():
+        p = Process(target = killMyPort, args=(port,))
+        p.start()
+        p.join()
+    pass
+  #
+
+  def _killAll(self, unused=None):
     try:
       import PortManager # mandatory
       from multiprocessing import Process
@@ -378,10 +418,18 @@ class SalomeContext:
       from killSalome import killAllPorts
       killAllPorts()
       pass
-
   #
 
-  def _showInfo(self, args=None):
+  def _runTests(self, args=[]):
+    sys.argv = ['runTests']
+    import setenv
+    setenv.main(True)
+
+    import runTests
+    return runTests.runTests(args, exe="salome test")
+  #
+
+  def _showInfo(self, unused=None):
     print "Running with python", platform.python_version()
     self._runAppli(["--version"])
   #
@@ -390,7 +438,7 @@ class SalomeContext:
     usage()
   #
 
-  def _makeCoffee(self, args=None):
+  def _makeCoffee(self, unused=None):
     print "                        ("
     print "                          )     ("
     print "                   ___...(-------)-....___"
@@ -401,9 +449,9 @@ class SalomeContext:
     print "       |  |    |                             |"
     print "        \\  \\   |                             |"
     print "         `\\ `\\ |                             |"
-    print "           `\\ `|                             |"
-    print "           _/ /\\                             /"
-    print "          (__/  \\                           /"
+    print "           `\\ `|            SALOME           |"
+    print "           _/ /\\            4 EVER           /"
+    print "          (__/  \\             <3            /"
     print "       _..---\"\"` \\                         /`\"\"---.._"
     print "    .-\'           \\                       /          \'-."
     print "   :               `-.__             __.-\'              :"
@@ -413,6 +461,43 @@ class SalomeContext:
     print "       \'._     \"\"\"----.....______.....----\"\"\"     _.\'"
     print "          `\"\"--..,,_____            _____,,..--\"\"`"
     print "                        `\"\"\"----\"\"\"`"
+    print ""
+    print "                    SALOME is working for you; what else?"
+    print ""
+    sys.exit(0)
+  #
+
+  def _getCar(self, unused=None):
+    print "                                              _____________"
+    print "                                  ..---:::::::-----------. ::::;;."
+    print "                               .\'\"\"\"\"\"\"                  ;;   \\  \":."
+    print "                            .\'\'                          ;     \\   \"\\__."
+    print "                          .\'                            ;;      ;   \\\\\";"
+    print "                        .\'                              ;   _____;   \\\\/"
+    print "                      .\'                               :; ;\"     \\ ___:\'."
+    print "                    .\'--...........................    : =   ____:\"    \\ \\"
+    print "               ..-\"\"                               \"\"\"\'  o\"\"\"     ;     ; :"
+    print "          .--\"\"  .----- ..----...    _.-    --.  ..-\"     ;       ;     ; ;"
+    print "       .\"\"_-     \"--\"\"-----\'\"\"    _-\"        .-\"\"         ;        ;    .-."
+    print "    .\'  .\'   SALOME             .\"         .\"              ;       ;   /. |"
+    print "   /-./\'         4 EVER <3    .\"          /           _..  ;       ;   ;;;|"
+    print "  :  ;-.______               /       _________==.    /_  \\ ;       ;   ;;;;"
+    print "  ;  / |      \"\"\"\"\"\"\"\"\"\"\".---.\"\"\"\"\"\"\"          :    /\" \". |;       ; _; ;;;"
+    print " /\"-/  |                /   /                  /   /     ;|;      ;-\" | ;\';"
+    print ":-  :   \"\"\"----______  /   /              ____.   .  .\"\'. ;;   .-\"..T\"   ."
+    print "\'. \"  ___            \"\":   \'\"\"\"\"\"\"\"\"\"\"\"\"\"\"    .   ; ;    ;; ;.\" .\"   \'--\""
+    print " \",   __ \"\"\"  \"\"---... :- - - - - - - - - \' \'  ; ;  ;    ;;\"  .\""
+    print "  /. ;  \"\"\"---___                             ;  ; ;     ;|.\"\""
+    print " :  \":           \"\"\"----.    .-------.       ;   ; ;     ;:"
+    print "  \\  \'--__               \\   \\        \\     /    | ;     ;;"
+    print "   \'-..   \"\"\"\"---___      :   .______..\\ __/..-\"\"|  ;   ; ;"
+    print "       \"\"--..       \"\"\"--\"        m l s         .   \". . ;"
+    print "             \"\"------...                  ..--\"\"      \" :"
+    print "                        \"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"    \\        /"
+    print "                                               \"------\""
+    print ""
+    print "                                Drive your simulation properly with SALOME!"
+    print ""
     sys.exit(0)
   #
 

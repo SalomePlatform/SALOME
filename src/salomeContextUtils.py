@@ -111,7 +111,7 @@ class ScriptAndArgs:
   # script: the command to be run, e.g. python <script.py>
   # args: its input parameters
   # out: its output parameters
-  def __init__(self, script = None, args = None, out = None):
+  def __init__(self, script=None, args=None, out=None):
     self.script = script
     self.args = args
     self.out = out
@@ -133,10 +133,24 @@ class ScriptAndArgsObjectEncoder(json.JSONEncoder):
       return json.JSONEncoder.default(self, obj)
 #
 
+def getShortAndExtraArgs(args=[]):
+  try:
+    pos = args.index("--") # raise a ValueError if not found
+    short_args = args[:pos]
+    extra_args = args[pos:] # include "--"
+  except ValueError:
+    short_args = args
+    extra_args = []
+    pass
+
+  return short_args, extra_args
+#
+
 # Return an array of ScriptAndArgs objects
-def getScriptsAndArgs(args=None, searchPathList=None):
-  if args is None:
-    args = []
+def getScriptsAndArgs(args=[], searchPathList=None):
+  short_args, extra_args = getShortAndExtraArgs(args)
+  args = short_args
+
   if searchPathList is None:
     searchPathList = sys.path
 
@@ -225,6 +239,13 @@ def getScriptsAndArgs(args=None, searchPathList=None):
       # CLOSE elif currentScript
       afterArgs = False
   # end for loop
+
+  if len(extra_args) > 1: # syntax: -- program [options] [arguments]
+    command = extra_args[1]
+    command_args = extra_args[2:]
+    scriptArgs.append(ScriptAndArgs(script=command, args=command_args))
+    pass
+
   return scriptArgs
 #
 
@@ -248,7 +269,7 @@ def formatScriptsAndArgs(scriptArgs=None):
     return command
 #
 
-# Ensure OMNIORB_USER_PATH is defined. This variable refers to a the folder in which
+# Ensure OMNIORB_USER_PATH is defined. This variable refers to a folder in which
 # SALOME will write omniOrb configuration files.
 # If OMNIORB_USER_PATH is already set, only checks write access to associated directory ;
 # an exception is raised if check fails. It allows users for choosing a specific folder.
