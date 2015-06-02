@@ -17,7 +17,7 @@
     </message>
     <message>
         <source>APP_VERSION</source>
-        <translation>V7.6.0p1</translation>
+        <translation>V7.5.1</translation>
     </message>
     <message>
         <source>ABOUT_LICENSE</source>
@@ -25,7 +25,7 @@
     </message>
     <message>
         <source>ABOUT_VERSION</source>
-        <translation>Version 7.6.0p1</translation>
+        <translation>Version 7.5.1</translation>
     </message>
     <message>
         <source>ABOUT_TITLE</source>
