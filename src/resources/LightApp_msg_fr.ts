@@ -9,15 +9,15 @@
     </message>
     <message>
         <source>ABOUT_CAPTION</source>
-        <translation>A propos de SALOME-7.6.0p2</translation>
+        <translation>A propos de TUTO_COUPLING</translation>
     </message>
     <message>
         <source>APP_NAME</source>
-        <translation>SALOME-7.6.0p2 </translation>
+        <translation>TUTO_COUPLING </translation>
     </message>
     <message>
         <source>APP_VERSION</source>
-        <translation>V7.6.0p2</translation>
+        <translation>V1.0</translation>
     </message>
     <message>
         <source>ABOUT_LICENSE</source>
@@ -25,11 +25,11 @@
     </message>
     <message>
         <source>ABOUT_VERSION</source>
-        <translation>Version 7.6.0p2</translation>
+        <translation>Version 1.0</translation>
     </message>
     <message>
         <source>ABOUT_TITLE</source>
-        <translation>SALOME-7.6.0p2</translation>
+        <translation>TUTO_COUPLING</translation>
     </message>
 </context>
 </TS>
