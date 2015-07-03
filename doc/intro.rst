@@ -1,4 +1,4 @@
 Introduction
 ==========================================
 
-Welcome to TUTO_COUPLING's documentation!
+Welcome to SALOME's documentation!

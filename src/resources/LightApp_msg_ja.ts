@@ -9,15 +9,15 @@
     </message>
     <message>
       <source>ABOUT_CAPTION</source>
-      <translation>About TUTO_COUPLING</translation>
+      <translation>About SALOME</translation>
     </message>
     <message>
       <source>APP_NAME</source>
-      <translation>TUTO_COUPLING </translation>
+      <translation>SALOME </translation>
     </message>
     <message>
       <source>APP_VERSION</source>
-      <translation>V1.0</translation>
+      <translation>V7.6.0p2</translation>
     </message>
     <message>
       <source>ABOUT_LICENSE</source>
@@ -25,11 +25,11 @@
     </message>
     <message>
       <source>ABOUT_VERSION</source>
-      <translation>Version 1.0</translation>
+      <translation>Version 7.6.0p2</translation>
     </message>
     <message>
       <source>ABOUT_TITLE</source>
-      <translation>TUTO_COUPLING</translation>
+      <translation>SALOME</translation>
     </message>
   </context>
 </TS>
