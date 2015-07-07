@@ -33,6 +33,8 @@ import platform
 from salomeContextUtils import SalomeContextException
 
 def usage():
+  #exeName = os.path.splitext(os.path.basename(__file__))[0]
+
   msg = '''\
 Usage: salome [command] [options] [--config=<file,folder,...>]
 
@@ -49,13 +51,14 @@ Commands:
     test            Run SALOME tests.
     info            Display some information about SALOME
     help            Show this message
+    coffee          Yes! SALOME can also make coffee!!
 
 If no command is given, default to start.
 
 Command options:
 ================
     Use salome <command> --help to show help on command ; available for commands:
-    start, shell, connect, test, info.
+    start, shell, test.
 
 --config=<file,folder,...>
 ==========================
@@ -236,16 +239,13 @@ class SalomeContext:
   See usage for details on commands.
   """
   def _startSalome(self, args):
-    import os
-    import sys
     try:
-      from setenv import add_path
+      import os
       absoluteAppliPath = os.getenv('ABSOLUTE_APPLI_PATH')
+      import sys
       path = os.path.realpath(os.path.join(absoluteAppliPath, "bin", "salome"))
-      add_path(path, "PYTHONPATH")
-      path = os.path.realpath(os.path.join(absoluteAppliPath, "bin", "salome", "appliskel"))
-      add_path(path, "PYTHONPATH")
-
+      if not path in sys.path:
+        sys.path[:0] = [path]
     except:
       pass
 
@@ -330,9 +330,7 @@ class SalomeContext:
     sys.path[:0] = pythonpath
   #
 
-  def _runAppli(self, args=None):
-    if args is None:
-      args = []
+  def _runAppli(self, args=[]):
     # Initialize SALOME environment
     sys.argv = ['runSalome'] + args
     import setenv
@@ -362,9 +360,7 @@ class SalomeContext:
     return proc.communicate()
   #
 
-  def _runSession(self, args=None):
-    if args is None:
-      args = []
+  def _runSession(self, args=[]):
     sys.argv = ['runSession'] + args
     import runSession
     params, args = runSession.configureSession(args, exe="salome shell")
@@ -376,21 +372,18 @@ class SalomeContext:
     return runSession.runSession(params, args)
   #
 
-  def _runConsole(self, args=None):
-    if args is None:
-      args = []
+  def _runConsole(self, args=[]):
     # Initialize SALOME environment
-    sys.argv = ['runConsole']
+    sys.argv = ['runConsole'] + args
     import setenv
     setenv.main(True)
 
-    import runConsole
-    return runConsole.connect(args)
+    cmd = ["python", "-c", "import runConsole\nrunConsole.connect()" ]
+    proc = subprocess.Popen(cmd, shell=False, close_fds=True)
+    return proc.communicate()
   #
 
-  def _kill(self, args=None):
-    if args is None:
-      args = []
+  def _kill(self, args=[]):
     ports = args
     if not ports:
       print "Port number(s) not provided to command: salome kill <port(s)>"
@@ -427,9 +420,7 @@ class SalomeContext:
       pass
   #
 
-  def _runTests(self, args=None):
-    if args is None:
-      args = []
+  def _runTests(self, args=[]):
     sys.argv = ['runTests']
     import setenv
     setenv.main(True)
@@ -438,35 +429,9 @@ class SalomeContext:
     return runTests.runTests(args, exe="salome test")
   #
 
-  def _showInfo(self, args=None):
-    if args is None:
-      args = []
-
-    usage = "Usage: salome info [options]"
-    epilog  = """\n
-Display some information about SALOME.\n
-Available options are:
-    -p,--ports        Show list of busy ports (running SALOME instances).
-    -v,--version      Show running SALOME version.
-    -h,--help         Show this message.
-"""
-    if not args:
-      args = ["--version"]
-
-    if "-h" in args or "--help" in args:
-      print usage + epilog
-      return
-
-    if "-p" in args or "--ports" in args:
-      import PortManager
-      ports = PortManager.getBusyPorts()
-      print "SALOME instances are running on ports:", ports
-      if ports:
-        print "Last started instance on port %s"%ports[-1]
-
-    if "-v" in args or "--version" in args:
-      print "Running with python", platform.python_version()
-      self._runAppli(["--version"])
+  def _showInfo(self, unused=None):
+    print "Running with python", platform.python_version()
+    self._runAppli(["--version"])
   #
 
   def _usage(self, unused=None):
