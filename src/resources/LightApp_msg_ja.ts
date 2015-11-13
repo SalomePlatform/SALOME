@@ -17,7 +17,7 @@
     </message>
     <message>
       <source>APP_VERSION</source>
-      <translation>Vmaster</translation>
+      <translation>master</translation>
     </message>
     <message>
       <source>ABOUT_LICENSE</source>
