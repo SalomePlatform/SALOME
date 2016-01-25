@@ -1,4 +1,4 @@
 Introduction
 ==========================================
 
-Welcome to SALOME's documentation!
+Welcome to [Name_of_Application]'s documentation!
