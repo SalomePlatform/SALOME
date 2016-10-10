@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2015  CEA/DEN, EDF R&D, OPEN CASCADE
+# Copyright (C) 2012-2016  CEA/DEN, EDF R&D, OPEN CASCADE
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -31,4 +31,4 @@ SET(_ts_RESOURCES
 
 # --- rules ---
 
-QT4_INSTALL_TS_RESOURCES("${_ts_RESOURCES}" "${SALOME_[NAME_OF_APPLICATION]_PROFILE_INSTALL_RES_DATA}")
+QT_INSTALL_TS_RESOURCES("${_ts_RESOURCES}" "${SALOME_SALOME_PROFILE_INSTALL_RES_DATA}")

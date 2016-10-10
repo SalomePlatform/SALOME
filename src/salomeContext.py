@@ -1,4 +1,4 @@
-# Copyright (C) 2013-2015  CEA/DEN, EDF R&D, OPEN CASCADE
+# Copyright (C) 2013-2016  CEA/DEN, EDF R&D, OPEN CASCADE
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -38,17 +38,20 @@ Usage: salome [command] [options] [--config=<file,folder,...>]
 
 Commands:
 =========
-    start           Starts a SALOME session (through virtual application)
-    context         Initializes SALOME context.
-    shell           Initializes SALOME context, and executes scripts passed
-                    as command arguments
-    connect         Connects a Python console to the active SALOME session
-    kill <port(s)>  Terminate SALOME session running on given ports for current user
-                    Port numbers must be separated by blank characters
-    killall         Kill *all* SALOME running sessions for current user
+    start           Start a new SALOME instance.
+    context         Initialize SALOME context. Current environment is extended.
+    shell           Initialize SALOME context, attached to the last created SALOME
+                    instance if any, and executes scripts passed as command arguments.
+                    User works in a Shell terminal; SALOME environment is set but
+                    application is not started.
+    connect         Connect a Python console to the active SALOME instance.
+    kill <port(s)>  Terminate SALOME instances running on given ports for current user.
+                    Port numbers must be separated by blank characters.
+    killall         Terminate *all* SALOME running instances for current user.
+                    Do not start a new one.
     test            Run SALOME tests.
-    info            Display some information about SALOME
-    help            Show this message
+    info            Display some information about SALOME.
+    help            Show this message.
 
 If no command is given, default to start.
 
@@ -82,6 +85,7 @@ class SalomeContext:
   to .cfg format before setting the context.
   """
   def __init__(self, configFileNames=0):
+    self.getLogger().setLevel(logging.INFO)
     #it could be None explicitely (if user use multiples setVariable...for standalone)
     if configFileNames is None:
        return
@@ -139,8 +143,8 @@ class SalomeContext:
     absoluteAppliPath = os.getenv('ABSOLUTE_APPLI_PATH','')
     env_copy = os.environ.copy()
     proc = subprocess.Popen(['python', os.path.join(absoluteAppliPath,"bin","salome","salomeContext.py"), pickle.dumps(self), pickle.dumps(args)], shell=False, close_fds=True, env=env_copy)
-    msg = proc.communicate()
-    return msg, proc.returncode
+    out, err = proc.communicate()
+    return out, err, proc.returncode
   #
 
   """Append value to PATH environment variable"""
@@ -150,7 +154,10 @@ class SalomeContext:
 
   """Append value to LD_LIBRARY_PATH environment variable"""
   def addToLdLibraryPath(self, value):
-    self.addToVariable('LD_LIBRARY_PATH', value)
+    if platform.system() == 'Windows':
+      self.addToVariable('PATH', value)
+    else:
+      self.addToVariable('LD_LIBRARY_PATH', value)
   #
 
   """Append value to DYLD_LIBRARY_PATH environment variable"""
@@ -287,7 +294,8 @@ class SalomeContext:
       file_base = os.path.basename(filename)
       base_no_ext, ext = os.path.splitext(file_base)
       sh_file = os.path.join(file_dir, base_no_ext+'.sh')
-      if ext == ".cfg" and os.path.isfile(sh_file):
+      #if ext == ".cfg" and os.path.isfile(sh_file):
+      if False:
         msg += "Found similar %s file; trying to parse this one instead..."%(base_no_ext+'.sh')
         temp = tempfile.NamedTemporaryFile(suffix='.cfg')
         try:
@@ -336,7 +344,7 @@ class SalomeContext:
     # Initialize SALOME environment
     sys.argv = ['runSalome'] + args
     import setenv
-    setenv.main(True)
+    setenv.main(True, exeName="salome start")
 
     import runSalome
     runSalome.runSalome()
@@ -422,6 +430,7 @@ class SalomeContext:
             p.start()
             p.join()
     except ImportError:
+      # :TODO: should be declared obsolete
       from killSalome import killAllPorts
       killAllPorts()
       pass
@@ -438,6 +447,24 @@ class SalomeContext:
     return runTests.runTests(args, exe="salome test")
   #
 
+  def _showSoftwareVersions(self):
+    config = ConfigParser.SafeConfigParser()
+    absoluteAppliPath = os.getenv('ABSOLUTE_APPLI_PATH')
+    filename = os.path.join(absoluteAppliPath, ".softwares_versions")
+    try:
+      config.read(filename)
+      sections = config.sections()
+      for section in sections:
+        entries = config.items(section, raw=True) # do not use interpolation
+        for key,val in entries:
+          version,text = [ x.strip() for x in val.split(',') ]
+          print "%s: %s"%(text, version)
+    except:
+      import traceback
+      traceback.print_exc()
+      return
+    pass
+
   def _showInfo(self, args=None):
     if args is None:
       args = []
@@ -446,7 +473,8 @@ class SalomeContext:
     epilog  = """\n
 Display some information about SALOME.\n
 Available options are:
-    -p,--ports        Show list of busy ports (running SALOME instances).
+    -p,--ports        Show the list of busy ports (running SALOME instances).
+    -s,--softwares    Show the list and versions of SALOME softwares.
     -v,--version      Show running SALOME version.
     -h,--help         Show this message.
 """
@@ -463,6 +491,9 @@ Available options are:
       print "SALOME instances are running on ports:", ports
       if ports:
         print "Last started instance on port %s"%ports[-1]
+
+    if "-s" in args or "--softwares" in args:
+      self._showSoftwareVersions()
 
     if "-v" in args or "--version" in args:
       print "Running with python", platform.python_version()

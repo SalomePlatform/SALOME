@@ -9,15 +9,15 @@
     </message>
     <message>
       <source>ABOUT_CAPTION</source>
-      <translation>About [Name_of_Application]</translation>
+      <translation>About SALOME</translation>
     </message>
     <message>
       <source>APP_NAME</source>
-      <translation>[Name_of_Application] [SLOGAN]</translation>
+      <translation>SALOME </translation>
     </message>
     <message>
       <source>APP_VERSION</source>
-      <translation>V[VERSION]</translation>
+      <translation>V8.1.0</translation>
     </message>
     <message>
       <source>ABOUT_LICENSE</source>
@@ -25,11 +25,11 @@
     </message>
     <message>
       <source>ABOUT_VERSION</source>
-      <translation>Version [VERSION]</translation>
+      <translation>Version 8.1.0</translation>
     </message>
     <message>
       <source>ABOUT_TITLE</source>
-      <translation>[Name_of_Application]</translation>
+      <translation>SALOME</translation>
     </message>
   </context>
 </TS>
