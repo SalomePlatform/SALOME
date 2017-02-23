@@ -1,4 +1,4 @@
-# Copyright (C) 2013-2015  CEA/DEN, EDF R&D, OPEN CASCADE
+# Copyright (C) 2013-2016  CEA/DEN, EDF R&D, OPEN CASCADE
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -23,7 +23,6 @@ import logging
 import ConfigParser
 
 from parseConfigFile import parseConfigFile
-from parseConfigFile import convertEnvFileToConfigFile
 
 import tempfile
 import pickle
@@ -38,24 +37,29 @@ Usage: salome [command] [options] [--config=<file,folder,...>]
 
 Commands:
 =========
-    start           Starts a SALOME session (through virtual application)
-    context         Initializes SALOME context.
-    shell           Initializes SALOME context, and executes scripts passed
-                    as command arguments
-    connect         Connects a Python console to the active SALOME session
-    kill <port(s)>  Terminate SALOME session running on given ports for current user
-                    Port numbers must be separated by blank characters
-    killall         Kill *all* SALOME running sessions for current user
+    start           Start a new SALOME instance.
+    context         Initialize SALOME context. Current environment is extended.
+    shell           Initialize SALOME context, attached to the last created SALOME
+                    instance if any, and executes scripts passed as command arguments.
+                    User works in a Shell terminal. SALOME environment is set but
+                    application is not started.
+    connect         Connect a Python console to the active SALOME instance.
+    kill <port(s)>  Terminate SALOME instances running on given ports for current user.
+                    Port numbers must be separated by blank characters.
+    killall         Terminate *all* SALOME running instances for current user.
+                    Do not start a new one.
     test            Run SALOME tests.
-    info            Display some information about SALOME
-    help            Show this message
+    info            Display some information about SALOME.
+    doc <module(s)> Show online module documentation (if available).
+                    Module names must be separated by blank characters.
+    help            Show this message.
 
-If no command is given, default to start.
+If no command is given, default is start.
 
 Command options:
 ================
-    Use salome <command> --help to show help on command ; available for commands:
-    start, shell, connect, test, info.
+    Use salome <command> --help to show help on command. Available for the
+    following commands: start, shell, connect, test, info.
 
 --config=<file,folder,...>
 ==========================
@@ -76,12 +80,10 @@ class SalomeContext:
   """
   Initialize context from a list of configuration files
   identified by their names.
-  These files should be in appropriate (new .cfg) format.
-  However you can give old .sh environment files; in this case,
-  the SalomeContext class will try to automatically convert them
-  to .cfg format before setting the context.
+  These files should be in appropriate .cfg format.
   """
   def __init__(self, configFileNames=0):
+    self.getLogger().setLevel(logging.INFO)
     #it could be None explicitely (if user use multiples setVariable...for standalone)
     if configFileNames is None:
        return
@@ -94,18 +96,6 @@ class SalomeContext:
       basename, extension = os.path.splitext(filename)
       if extension == ".cfg":
         self.__setContextFromConfigFile(filename, reserved)
-      elif extension == ".sh":
-        #new convert procedures, temporary could be use not to be automatically deleted
-        #temp = tempfile.NamedTemporaryFile(suffix='.cfg', delete=False)
-        temp = tempfile.NamedTemporaryFile(suffix='.cfg')
-        try:
-          convertEnvFileToConfigFile(filename, temp.name, reserved)
-          self.__setContextFromConfigFile(temp.name, reserved)
-          temp.close()
-        except (ConfigParser.ParsingError, ValueError) as e:
-          self.getLogger().error("Invalid token found when parsing file: %s\n"%(filename))
-          temp.close()
-          sys.exit(1)
       else:
         self.getLogger().warning("Unrecognized extension for configuration file: %s", filename)
   #
@@ -139,8 +129,8 @@ class SalomeContext:
     absoluteAppliPath = os.getenv('ABSOLUTE_APPLI_PATH','')
     env_copy = os.environ.copy()
     proc = subprocess.Popen(['python', os.path.join(absoluteAppliPath,"bin","salome","salomeContext.py"), pickle.dumps(self), pickle.dumps(args)], shell=False, close_fds=True, env=env_copy)
-    msg = proc.communicate()
-    return msg, proc.returncode
+    out, err = proc.communicate()
+    return out, err, proc.returncode
   #
 
   """Append value to PATH environment variable"""
@@ -150,7 +140,10 @@ class SalomeContext:
 
   """Append value to LD_LIBRARY_PATH environment variable"""
   def addToLdLibraryPath(self, value):
-    self.addToVariable('LD_LIBRARY_PATH', value)
+    if platform.system() == 'Windows':
+      self.addToVariable('PATH', value)
+    else:
+      self.addToVariable('LD_LIBRARY_PATH', value)
   #
 
   """Append value to DYLD_LIBRARY_PATH environment variable"""
@@ -218,6 +211,7 @@ class SalomeContext:
       'killall' : '_killAll',
       'test'    : '_runTests',
       'info'    : '_showInfo',
+      'doc'     : '_showDoc',
       'help'    : '_usage',
       'coffee'  : '_makeCoffee',
       'car'     : '_getCar',
@@ -283,28 +277,8 @@ class SalomeContext:
       unsetVars, configVars, reservedDict = parseConfigFile(filename, reserved)
     except SalomeContextException, e:
       msg = "%s"%e
-      file_dir = os.path.dirname(filename)
-      file_base = os.path.basename(filename)
-      base_no_ext, ext = os.path.splitext(file_base)
-      sh_file = os.path.join(file_dir, base_no_ext+'.sh')
-      if ext == ".cfg" and os.path.isfile(sh_file):
-        msg += "Found similar %s file; trying to parse this one instead..."%(base_no_ext+'.sh')
-        temp = tempfile.NamedTemporaryFile(suffix='.cfg')
-        try:
-          convertEnvFileToConfigFile(sh_file, temp.name, reserved)
-          self.__setContextFromConfigFile(temp.name, reserved)
-          msg += "OK\n"
-          self.getLogger().warning(msg)
-          temp.close()
-          return
-        except (ConfigParser.ParsingError, ValueError) as e:
-          msg += "Invalid token found when parsing file: %s\n"%(sh_file)
-          self.getLogger().error(msg)
-          temp.close()
-          sys.exit(1)
-      else:
-        self.getLogger().error(msg)
-        sys.exit(1)
+      self.getLogger().error(msg)
+      sys.exit(1)
 
     # unset variables
     for var in unsetVars:
@@ -336,7 +310,7 @@ class SalomeContext:
     # Initialize SALOME environment
     sys.argv = ['runSalome'] + args
     import setenv
-    setenv.main(True)
+    setenv.main(True, exeName="salome start")
 
     import runSalome
     runSalome.runSalome()
@@ -422,6 +396,7 @@ class SalomeContext:
             p.start()
             p.join()
     except ImportError:
+      # :TODO: should be declared obsolete
       from killSalome import killAllPorts
       killAllPorts()
       pass
@@ -438,6 +413,32 @@ class SalomeContext:
     return runTests.runTests(args, exe="salome test")
   #
 
+  def _showSoftwareVersions(self, softwares=None):
+    config = ConfigParser.SafeConfigParser()
+    absoluteAppliPath = os.getenv('ABSOLUTE_APPLI_PATH')
+    filename = os.path.join(absoluteAppliPath, "sha1_collections.txt")
+    versions = {}
+    max_len = 0
+    with open(filename) as f:
+      for line in f:
+        try:
+          software, version, sha1 = line.split()
+          versions[software.upper()] = version
+          if len(software) > max_len:
+            max_len = len(software)
+        except:
+          pass
+        pass
+      pass
+    if softwares:
+      for soft in softwares:
+        if versions.has_key(soft.upper()):
+          print soft.upper().rjust(max_len), versions[soft.upper()]
+    else:
+      for name, version in versions.items():
+        print name.rjust(max_len), versions[name]
+    pass
+
   def _showInfo(self, args=None):
     if args is None:
       args = []
@@ -446,9 +447,12 @@ class SalomeContext:
     epilog  = """\n
 Display some information about SALOME.\n
 Available options are:
-    -p,--ports        Show list of busy ports (running SALOME instances).
-    -v,--version      Show running SALOME version.
-    -h,--help         Show this message.
+    -p,--ports                     Show the list of busy ports (running SALOME instances).
+    -s,--softwares [software(s)]   Show the list and versions of SALOME softwares.
+                                   Software names must be separated by blank characters.
+                                   If no software is given, show version of all softwares.
+    -v,--version                   Show running SALOME version.
+    -h,--help                      Show this message.
 """
     if not args:
       args = ["--version"]
@@ -464,10 +468,44 @@ Available options are:
       if ports:
         print "Last started instance on port %s"%ports[-1]
 
+    if "-s" in args or "--softwares" in args:
+      if "-s" in args:
+        index = args.index("-s")
+      else:
+        index = args.index("--softwares")
+      indexEnd=index+1
+      while indexEnd < len(args) and args[indexEnd][0] != "-":
+        indexEnd = indexEnd + 1
+      self._showSoftwareVersions(softwares=args[index+1:indexEnd])
+
     if "-v" in args or "--version" in args:
       print "Running with python", platform.python_version()
       self._runAppli(["--version"])
   #
+
+  def _showDoc(self, args=None):
+    if args is None:
+      args = []
+
+    modules = args
+    if not modules:
+      print "Module(s) not provided to command: salome doc <module(s)>"
+      return
+
+    appliPath = os.getenv("ABSOLUTE_APPLI_PATH")
+    if not appliPath:
+      raise SalomeContextException("Unable to find application path. Please check that the variable ABSOLUTE_APPLI_PATH is set.")
+    baseDir = os.path.join(appliPath, "share", "doc", "salome")
+    for module in modules:
+      docfile = os.path.join(baseDir, "gui", module.upper(), "index.html")
+      if not os.path.isfile(docfile):
+        docfile = os.path.join(baseDir, "tui", module.upper(), "index.html")
+      if not os.path.isfile(docfile):
+        docfile = os.path.join(baseDir, "dev", module.upper(), "index.html")
+      if os.path.isfile(docfile):
+        out, err = subprocess.Popen(["xdg-open", docfile]).communicate()
+      else:
+        print "Online documentation is not accessible for module:", module
 
   def _usage(self, unused=None):
     usage()

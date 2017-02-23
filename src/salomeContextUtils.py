@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-# Copyright (C) 2013-2015  CEA/DEN, EDF R&D, OPEN CASCADE
+# Copyright (C) 2013-2016  CEA/DEN, EDF R&D, OPEN CASCADE
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -39,12 +39,6 @@ def __listDirectory(path):
   for root, dirs, files in os.walk(path):
     cfgFiles = glob.glob(os.path.join(root,'*.cfg'))
     allFiles += cfgFiles
-
-    shFiles = glob.glob(os.path.join(root,'*.sh'))
-    for f in shFiles:
-      no_ext = os.path.splitext(f)[0]
-      if not os.path.isfile(no_ext+".cfg"):
-        allFiles.append(f)
 
   return allFiles
 #
@@ -87,103 +81,16 @@ def __getEnvironmentFileNames(args, optionPrefix, checkExistence):
   return configFileNames, args, unexisting
 #
 
-def __validate_pair(ob):
-  try:
-    if not (len(ob) == 2):
-      #print "Unexpected result:", ob
-      raise ValueError
-  except:
-    return False
-  return True
-#
-def __get_environment_from_batch_command(env_cmd, initial=None):
-  """
-  Take a command (either a single command or list of arguments)
-  and return the environment created after running that command.
-  Note that if the command must be a batch file or .cmd file, or the
-  changes to the environment will not be captured.
-
-  If initial is supplied, it is used as the initial environment passed
-  to the child process.
-  """
-  #if not isinstance(env_cmd, (list, tuple)):
-  #    env_cmd = [env_cmd]
-  # construct the command that will alter the environment
-  #env_cmd = subprocess.list2cmdline(env_cmd)
-  # create a tag so we can tell in the output when the proc is done
-  tag = 'Done running command'
-  # construct a command to do accomplish this
-  cmd = '{env_cmd} && echo "{tag}"'.format(**vars())
-
-  # launch the process
-  proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, env=initial, shell=True)
-  # parse the output sent to stdout
-  lines = proc.stdout
-  # consume whatever output occurs until the tag is reached
-  #consume(itertools.takewhile(lambda l: tag not in l, lines))
-  # define a way to handle each KEY=VALUE line
-  handle_line = lambda l: l.rstrip().split('=',1)
-  # parse key/values into pairs
-  #pairs = map(handle_line, lines)
-  pairs = []
-  cpt = 0
-  while True:
-    line = lines.readline()
-    cpt = cpt+1
-    if tag in line or cpt > 1000:
-      break
-    if line:
-      pairs.append(line.rstrip().split('=',1))
-  # make sure the pairs are valid
-  valid_pairs = filter(__validate_pair, pairs)
-  # construct a dictionary of the pairs
-  result = dict(valid_pairs)
-  # let the process finish
-  proc.communicate()
-  return result
-#
-def __subtract(ref, dic):
-  result = {}
-  for key,val in ref.items():
-    if not dic.has_key(key):
-      result[key] = val
-    else:
-      # compare values types
-      if (type(dic[key]) != type(val)):
-        result[key] = val
-      else:
-        # compare values
-        if isinstance(val, basestring):
-          tolist1 = dic[key].split(os.pathsep)
-          tolist2 = val.split(os.pathsep)
-          diff = list(set(tolist2)-set(tolist1))
-          if diff:
-            result[key] = os.pathsep.join(diff)
-        else:
-          result[key] = val
-
-  return result
-#
-
 def getConfigFileNames(args, checkExistence=False):
   configOptionPrefix = "--config="
   configArgs = [ str(x) for x in args if str(x).startswith(configOptionPrefix) ]
   if len(configArgs) == 0:
-    configFileNames, unexist1 = __getConfigFileNamesDefault(), []
+    configFileNames, unexist = __getConfigFileNamesDefault(), []
   else:
     # get configuration filenames
-    configFileNames, args, unexist1 = __getEnvironmentFileNames(args, configOptionPrefix, checkExistence)
+    configFileNames, args, unexist = __getEnvironmentFileNames(args, configOptionPrefix, checkExistence)
 
-  # get extra environment
-  extraEnvFileNames, args, unexist2 = __getEnvironmentFileNames(args, "--extra_env=", checkExistence)
-  before = __get_environment_from_batch_command("env")
-  after = {}
-  for filename in extraEnvFileNames:
-    after.update(__get_environment_from_batch_command(filename))
-    pass
-
-  extraEnv = __subtract(after,before)
-  return configFileNames, extraEnv, args, unexist1+unexist2
+  return configFileNames, args, unexist
 #
 
 def __getScriptPath(scriptName, searchPathList):
@@ -270,7 +177,35 @@ def getScriptsAndArgs(args=None, searchPathList=None):
       if not currentKey or callPython:
         raise SalomeContextException("args list must follow corresponding script file in command line.")
       elt = elt.replace(argsPrefix, '')
-      scriptArgs[len(scriptArgs)-1].args = [os.path.expanduser(x) for x in elt.split(",")]
+      # Special process if some items of 'args:' list are themselves lists
+      # Note that an item can be a list, but not a list of lists...
+      # So we can have something like this:
+      # myscript.py args:['file1','file2'],val1,"done",[1,2,3],[True,False],"ok"
+      # With such a call, an elt variable contains the string representing ['file1','file2'],val1,"done",[1,2,3],[True,False],"ok" that is '[file1,file2],val1,done,[1,2,3],[True,False],ok'
+      # We have to split elt to obtain: ['[file1,file2]','val1','done','[1,2,3]','[True,False]','ok']
+      contains_list = re.findall('(\[[^\]]*\])', elt)
+      if contains_list:
+        extracted_args = []
+        x = elt.split(",")
+        # x is ['[file1', 'file2]', 'val1', 'done', '[1', '2', '3]', '[True', 'False]', 'ok']
+        list_begin_indices = [i for i in xrange(len(x)) if x[i].startswith('[')] # [0, 4, 7]
+        list_end_indices = [i for i in xrange(len(x)) if x[i].endswith(']')] # [1, 6, 8]
+        start = 0
+        for lbeg, lend in zip(list_begin_indices,list_end_indices): # [(0, 1), (4, 6), (7, 8)]
+          if lbeg > start:
+            extracted_args += x[start:lbeg]
+            pass
+          extracted_args += [','.join(x[lbeg:lend+1])]
+          start = lend+1
+          pass
+        if start < len(x):
+          extracted_args += x[start:len(x)]
+          pass
+        scriptArgs[len(scriptArgs)-1].args = extracted_args
+        pass
+      else: # a single split is enough
+        scriptArgs[len(scriptArgs)-1].args = [os.path.expanduser(x) for x in elt.split(",")]
+        pass
       currentKey = None
       callPython = False
       afterArgs = True
