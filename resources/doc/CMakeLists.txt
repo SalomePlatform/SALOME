@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2015  CEA/DEN, EDF R&D, OPEN CASCADE
+# Copyright (C) 2012-2016  CEA/DEN, EDF R&D, OPEN CASCADE
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -24,4 +24,4 @@ SET(_bin_DOCUMENTS
    sample.pdf
 )
 
-INSTALL(FILES ${_bin_DOCUMENTS} DESTINATION ${SALOME_[NAME_OF_APPLICATION]_PROFILE_INSTALL_DOC_GUI})
+INSTALL(FILES ${_bin_DOCUMENTS} DESTINATION ${SALOME_SALOME_PROFILE_INSTALL_DOC_GUI})
