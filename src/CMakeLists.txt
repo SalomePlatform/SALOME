@@ -18,5 +18,5 @@
 #
 
 # --- sub-directories ---
-ADD_SUBDIRECTORY( tests )
+# ADD_SUBDIRECTORY( tests )
 ADD_SUBDIRECTORY( resources )

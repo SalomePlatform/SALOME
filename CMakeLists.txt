@@ -116,7 +116,7 @@ INSTALL(CODE "FILE(MAKE_DIRECTORY ${CMAKE_INSTALL_PREFIX}/USERS)")
 # ========
 ADD_SUBDIRECTORY( src )
 ADD_SUBDIRECTORY( resources )
-ADD_SUBDIRECTORY( doc )
+#ADD_SUBDIRECTORY( doc )
 
 # Additional files
 # ================
