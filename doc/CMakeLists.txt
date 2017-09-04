@@ -17,11 +17,15 @@
 # See http://www.salome-platform.org/ or email : webmaster.salome@opencascade.com
 #
 
-# --- scripts ---
+SALOME_CONFIGURE_FILE(conf.py.in conf.py)
 
-# scripts / static
-SET(_bin_DOCUMENTS
-   sample.pdf
-)
+SET(_cmd_options -c ${CMAKE_CURRENT_BINARY_DIR} -b html -d doctrees -D latex_paper_size=a4 ${CMAKE_CURRENT_SOURCE_DIR} html)
+SALOME_GENERATE_ENVIRONMENT_SCRIPT(_cmd env_script "${SPHINX_EXECUTABLE}" "${_cmd_options}")            
 
-INSTALL(FILES ${_bin_DOCUMENTS} DESTINATION ${SALOME_SALOME_PROFILE_INSTALL_DOC_GUI})
+ADD_CUSTOM_TARGET(html_docs COMMAND ${_cmd})
+
+INSTALL(CODE "EXECUTE_PROCESS(COMMAND \"${CMAKE_COMMAND}\" --build ${PROJECT_BINARY_DIR} --target html_docs)")
+INSTALL(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/html/ DESTINATION ${SALOME_SALOME_PROFILE_INSTALL_DOC_GUI})
+
+SET(make_clean_files html doctrees)
+SET_DIRECTORY_PROPERTIES(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES "${make_clean_files}")

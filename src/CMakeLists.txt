@@ -17,11 +17,6 @@
 # See http://www.salome-platform.org/ or email : webmaster.salome@opencascade.com
 #
 
-# --- scripts ---
-
-# scripts / static
-SET(_bin_DOCUMENTS
-   sample.pdf
-)
-
-INSTALL(FILES ${_bin_DOCUMENTS} DESTINATION ${SALOME_SALOME_PROFILE_INSTALL_DOC_GUI})
+# --- sub-directories ---
+ADD_SUBDIRECTORY( tests )
+ADD_SUBDIRECTORY( resources )

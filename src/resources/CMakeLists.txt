@@ -17,11 +17,18 @@
 # See http://www.salome-platform.org/ or email : webmaster.salome@opencascade.com
 #
 
-# --- scripts ---
+INCLUDE(UseQtExt)
 
-# scripts / static
-SET(_bin_DOCUMENTS
-   sample.pdf
-)
+# --- resources ---
 
-INSTALL(FILES ${_bin_DOCUMENTS} DESTINATION ${SALOME_SALOME_PROFILE_INSTALL_DOC_GUI})
+# resource files / to be processed by lrelease
+SET(_ts_RESOURCES
+  LightApp_images.ts
+  LightApp_msg_en.ts
+  LightApp_msg_fr.ts
+  LightApp_msg_ja.ts
+) 
+
+# --- rules ---
+
+QT_INSTALL_TS_RESOURCES("${_ts_RESOURCES}" "${SALOME_SALOME_PROFILE_INSTALL_RES_DATA}")

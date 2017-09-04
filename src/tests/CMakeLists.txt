@@ -20,8 +20,10 @@
 # --- scripts ---
 
 # scripts / static
-SET(_bin_DOCUMENTS
-   sample.pdf
+SET(_bin_SCRIPTS
+   helloWorld.py
 )
 
-INSTALL(FILES ${_bin_DOCUMENTS} DESTINATION ${SALOME_SALOME_PROFILE_INSTALL_DOC_GUI})
+# --- rules ---
+SALOME_INSTALL_SCRIPTS("${_bin_SCRIPTS}" ${SALOME_INSTALL_SCRIPT_PYTHON})
+
