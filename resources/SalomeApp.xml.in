@@ -16,7 +16,7 @@
     <parameter name="standalone" value=""/>
   </section>
   <section name="splash">
-    <parameter name="image" value="%SALOME_ROOT_DIR%/share/salome/resources/salome_profile/splash.png"/>
+    <parameter name="image" value="%SALOME_ROOT_DIR%/share/salome/resources/salome/splash.png"/>
     <parameter name="text_colors" value="#ffffff|#000000"/>
     <parameter name="show_percents" value="yes"/>
     <parameter name="show_progress" value="yes"/>
@@ -24,6 +24,6 @@
     <parameter name="font" value="Xirod,12,normal"/>
   </section>
   <section name="resources">
-    <parameter name="LightApp" value="%SALOME_ROOT_DIR%/share/salome/resources/salome_profile"/>
+    <parameter name="LightApp" value="%SALOME_ROOT_DIR%/share/salome/resources/salome"/>
   </section>
 </document>
