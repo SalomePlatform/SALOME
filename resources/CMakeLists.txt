@@ -17,20 +17,26 @@
 # See http://www.salome-platform.org/ or email : webmaster.salome@opencascade.com
 #
 
+INCLUDE(UseQtExt)
+
 # --- resources ---
-SET(SALOME_PROFILE_RESOURCES_FILES
+SET(SALOME_RESOURCES_FILES
   app_icon.png
   splash.png
   about.png
   icon_about.png
   app_logo.png
 )
+SET(_ts_RESOURCES
+  LightApp_images.ts
+  LightApp_msg_en.ts
+  LightApp_msg_fr.ts
+  LightApp_msg_ja.ts
+) 
 
 # --- rules ---
-INSTALL(FILES ${SALOME_PROFILE_RESOURCES_FILES} DESTINATION ${SALOME_SALOME_INSTALL_RES_DATA})
+INSTALL(FILES ${SALOME_RESOURCES_FILES} DESTINATION ${SALOME_INSTALL_RES_DATA})
+QT_INSTALL_TS_RESOURCES("${_ts_RESOURCES}" "${SALOME_INSTALL_RES_DATA}")
 
 # --- config ---
-SALOME_CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/SalomeApp.xml.in ${CMAKE_CURRENT_BINARY_DIR}/SalomeApp.xml INSTALL ${SALOME_SALOME_INSTALL_RES_DATA})
-
-# --- sub-directories ---
-ADD_SUBDIRECTORY( doc )
+SALOME_CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/SalomeApp.xml.in ${CMAKE_CURRENT_BINARY_DIR}/SalomeApp.xml INSTALL ${SALOME_INSTALL_RES_DATA})
