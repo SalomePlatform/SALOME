@@ -126,6 +126,11 @@ SET(_salome_context_API_SCRIPTS
    ${KERNEL_ROOT_DIR}/bin/salome/parseConfigFile.py
 )
 SALOME_INSTALL_SCRIPTS("${_salome_context_API_SCRIPTS}" ${SALOME_INSTALL_SCRIPT_PYTHON})
+SET(_salome_context_TEST_DRIVER
+   ${KERNEL_ROOT_DIR}/bin/salome/appliskel/salome_test_driver.py
+   ${KERNEL_ROOT_DIR}/bin/salome/appliskel/salome_test_driver_gui.py
+)
+SALOME_INSTALL_SCRIPTS("${_salome_context_TEST_DRIVER}" ${SALOME_INSTALL_SCRIPT_PYTHON}/appliskel)
 SET(_salome_context_BASHRC
    ${KERNEL_ROOT_DIR}/bin/salome/appliskel/.bashrc
 )
