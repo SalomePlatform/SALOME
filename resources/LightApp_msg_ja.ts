@@ -25,7 +25,7 @@
     </message>
     <message>
       <source>ABOUT_VERSION</source>
-      <translation>Version 9.1.0</translation>
+      <translation>Version 9.2.0</translation>
     </message>
     <message>
       <source>ABOUT_TITLE</source>
