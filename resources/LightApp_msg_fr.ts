@@ -17,7 +17,7 @@
     </message>
     <message>
         <source>APP_VERSION</source>
-        <translation>9.2.0</translation>
+        <translation>9.3.0</translation>
     </message>
     <message>
         <source>ABOUT_LICENSE</source>
@@ -25,7 +25,7 @@
     </message>
     <message>
         <source>ABOUT_VERSION</source>
-        <translation>Version 9.2.0</translation>
+        <translation>Version 9.3.0</translation>
     </message>
     <message>
         <source>ABOUT_TITLE</source>
