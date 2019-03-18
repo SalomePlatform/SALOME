@@ -4,8 +4,11 @@
 <context>
     <name>@default</name>
     <message>
-        <source>ABOUT_COPYRIGHT</source>
-        <translation>Copyright (C)</translation>
+      <source>ABOUT_COPYRIGHT</source>
+        <translation>Copyright (C) 2007-2019 CEA/DEN, EDF R&amp;D, OPEN CASCADE
+
+Copyright (C) 2003-2007 OPEN CASCADE, EADS/CCR, LIP6,
+CEA/DEN, CEDRAT, EDF R&amp;D, LEG, PRINCIPIA R&amp;D, BUREAU VERITAS</translation>
     </message>
     <message>
         <source>ABOUT_CAPTION</source>
@@ -21,7 +24,7 @@
     </message>
     <message>
         <source>ABOUT_LICENSE</source>
-        <translation>License description</translation>
+        <translation>GNU LGPL</translation>
     </message>
     <message>
         <source>ABOUT_VERSION</source>
