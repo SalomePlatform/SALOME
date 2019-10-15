@@ -23,7 +23,7 @@
 
 # These files are executable scripts
 SET(SCRIPTS
-  salome.py
+  start_salome.py
   )
 
 SALOME_INSTALL_SCRIPTS("${SCRIPTS}" ${SALOME_INSTALL_SCRIPT_PYTHON})
