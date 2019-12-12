@@ -23,7 +23,8 @@
 
 # These files are executable scripts
 SET(SCRIPTS
-  start_salome.py
+  start_salome.py  # light python launcher
+  salome.py        # python launcher with context api relying on runSalome.py
   )
 
 SALOME_INSTALL_SCRIPTS("${SCRIPTS}" ${SALOME_INSTALL_SCRIPT_PYTHON})
