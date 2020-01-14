@@ -1,5 +1,6 @@
 SUBDIRS(../../../../KERNEL/bin/salome/test/)
 SUBDIRS(../../../../GEOM/bin/salome/test/)
+SUBDIRS(../../../../SHAPER/bin/salome/test/)
 SUBDIRS(../../../../SMESH/bin/salome/test/)
 SUBDIRS(../../../../BLSURFPLUGIN/bin/salome/test/)
 SUBDIRS(../../../../HYBRIDPLUGIN/bin/salome/test/)
