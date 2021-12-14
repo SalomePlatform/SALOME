@@ -17,21 +17,16 @@
 # See http://www.salome-platform.org/ or email : webmaster.salome@opencascade.com
 #
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8.8 FATAL_ERROR)
-PROJECT(Salome_SALOME C CXX)
 
-# Versioning
-# ===========
-# Project name, upper case
+# Project name
+# ============
+# original
+PROJECT(Salome_SALOME C CXX)
+# upper case
 STRING(TOUPPER ${PROJECT_NAME} PROJECT_NAME_UC)
 
-SET(${PROJECT_NAME_UC}_MAJOR_VERSION 0)
-SET(${PROJECT_NAME_UC}_MINOR_VERSION 0)
-SET(${PROJECT_NAME_UC}_PATCH_VERSION 0)
-SET(${PROJECT_NAME_UC}_VERSION
-  ${${PROJECT_NAME_UC}_MAJOR_VERSION}.${${PROJECT_NAME_UC}_MINOR_VERSION}.${${PROJECT_NAME_UC}_PATCH_VERSION})
-
-
 # Common CMake macros
+# ===================
 SET(CONFIGURATION_ROOT_DIR $ENV{CONFIGURATION_ROOT_DIR} CACHE PATH "Path to the Salome CMake configuration files")
 IF(EXISTS ${CONFIGURATION_ROOT_DIR})
   LIST(APPEND CMAKE_MODULE_PATH "${CONFIGURATION_ROOT_DIR}/cmake")
@@ -39,6 +34,11 @@ IF(EXISTS ${CONFIGURATION_ROOT_DIR})
 ELSE()
   MESSAGE(FATAL_ERROR "We absolutely need the Salome CMake configuration files, please define CONFIGURATION_ROOT_DIR !")
 ENDIF()
+
+# Versioning
+# ===========
+SALOME_SETUP_VERSION(9.8.0)
+MESSAGE(STATUS "Building ${PROJECT_NAME_UC} ${${PROJECT_NAME_UC}_VERSION} from \"${${PROJECT_NAME_UC}_GIT_SHA1}\"")
 
 # Find KERNEL
 # ===========
