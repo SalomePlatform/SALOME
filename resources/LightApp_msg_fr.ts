@@ -5,7 +5,7 @@
     <name>@default</name>
     <message>
         <source>ABOUT_COPYRIGHT</source>
-        <translation>Copyright (C) 2007-2021 CEA/DEN, EDF R&amp;D, OPEN CASCADE
+        <translation>Copyright (C) 2007-2022 CEA/DEN, EDF R&amp;D, OPEN CASCADE
 
 Copyright (C) 2003-2007 OPEN CASCADE, EADS/CCR, LIP6,
 CEA/DEN, CEDRAT, EDF R&amp;D, LEG, PRINCIPIA R&amp;D, BUREAU VERITAS</translation>
@@ -20,7 +20,7 @@ CEA/DEN, CEDRAT, EDF R&amp;D, LEG, PRINCIPIA R&amp;D, BUREAU VERITAS</translatio
     </message>
     <message>
         <source>APP_VERSION</source>
-        <translation>9.8.0</translation>
+        <translation>9.9.0</translation>
     </message>
     <message>
         <source>ABOUT_LICENSE</source>
@@ -28,7 +28,7 @@ CEA/DEN, CEDRAT, EDF R&amp;D, LEG, PRINCIPIA R&amp;D, BUREAU VERITAS</translatio
     </message>
     <message>
         <source>ABOUT_VERSION</source>
-        <translation>Version 9.8.0</translation>
+        <translation>Version 9.9.0</translation>
     </message>
     <message>
         <source>ABOUT_TITLE</source>
