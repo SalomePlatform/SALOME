@@ -20,7 +20,7 @@ CEA/DEN, CEDRAT, EDF R&amp;D, LEG, PRINCIPIA R&amp;D, BUREAU VERITAS</translatio
     </message>
     <message>
         <source>APP_VERSION</source>
-        <translation>A.B.C</translation>
+        <translation>9.10.0</translation>
     </message>
     <message>
         <source>ABOUT_LICENSE</source>
@@ -28,7 +28,7 @@ CEA/DEN, CEDRAT, EDF R&amp;D, LEG, PRINCIPIA R&amp;D, BUREAU VERITAS</translatio
     </message>
     <message>
         <source>ABOUT_VERSION</source>
-        <translation>Version A.B.C</translation>
+        <translation>Version 9.10.0</translation>
     </message>
     <message>
         <source>ABOUT_TITLE</source>
