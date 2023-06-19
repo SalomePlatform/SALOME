@@ -5,7 +5,7 @@
     <name>@default</name>
     <message>
       <source>ABOUT_COPYRIGHT</source>
-        <translation>Copyright (C) 2007-2023 CEA/DEN, EDF R&amp;D, OPEN CASCADE
+        <translation>Copyright (C) 2007-2023 CEA, EDF, OPEN CASCADE
 
 Copyright (C) 2003-2007 OPEN CASCADE, EADS/CCR, LIP6,
 CEA/DEN, CEDRAT, EDF R&amp;D, LEG, PRINCIPIA R&amp;D, BUREAU VERITAS</translation>
