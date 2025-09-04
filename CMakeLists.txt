@@ -117,16 +117,16 @@ ADD_SUBDIRECTORY( bin )
 SET(_salome_context_API_SCRIPTS
    ${KERNEL_ROOT_DIR}/bin/salome/salomeContext.py
    ${KERNEL_ROOT_DIR}/bin/salome/salomeContextUtils.py
-   ${KERNEL_ROOT_DIR}/bin/salome/parseConfigFile.py
+   ${KERNEL_ROOT_DIR}/lib/python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}/site-packages/salome/kernel/parseConfigFile.py
 )
 SALOME_INSTALL_SCRIPTS("${_salome_context_API_SCRIPTS}" ${SALOME_INSTALL_SCRIPT_PYTHON})
 SET(_salome_context_TEST_DRIVER
-   ${KERNEL_ROOT_DIR}/bin/salome/appliskel/salome_test_driver.py
-   ${KERNEL_ROOT_DIR}/bin/salome/appliskel/salome_test_driver_gui.py
+   ${KERNEL_ROOT_DIR}/bin/salome/appli/salome_test_driver.py
+   ${KERNEL_ROOT_DIR}/bin/salome/appli/salome_test_driver_gui.py
 )
-SALOME_INSTALL_SCRIPTS("${_salome_context_TEST_DRIVER}" ${SALOME_INSTALL_SCRIPT_PYTHON}/appliskel)
+SALOME_INSTALL_SCRIPTS("${_salome_context_TEST_DRIVER}" ${SALOME_INSTALL_SCRIPT_PYTHON}/appli)
 SET(_salome_context_BASHRC
-   ${KERNEL_ROOT_DIR}/bin/salome/appliskel/.bashrc
+   ${KERNEL_ROOT_DIR}/bin/salome/appli/.bashrc
 )
 FILE(TO_CMAKE_PATH ${CMAKE_INSTALL_PREFIX} _SALOME_ROOT_DIR)
-SALOME_INSTALL_SCRIPTS("${_salome_context_BASHRC}" ${_SALOME_ROOT_DIR})
+SALOME_INSTALL_SCRIPTS("${_salome_context_BASHRC}" "${_SALOME_ROOT_DIR}/bin/salome/appli")
