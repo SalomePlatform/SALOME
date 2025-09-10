@@ -7,8 +7,8 @@ import json
 #
 import orbmodule
 from searchFreePort import searchFreePort
-import SALOME
-import SALOME_ModuleCatalog
+from salome.kernel import SALOME
+from salome.kernel import SALOME_ModuleCatalog
 #
 # define supported options
 # [PYTHON_FILE [args] [PYTHON_FILE [args]...]]
